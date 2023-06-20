@@ -15,6 +15,9 @@
 #define FIREBASE_AUTH "AIzaSyD6OJTHib5F8mwulbtlb_cIK4DbPipMkas"
 FirebaseData firebaseData;
 FirebaseJson json;
+unsigned long lastResetTimestamp = 0;
+int antrianTerakhir = 0;
+int tanggalTerakhir = 0;
 
 Adafruit_Thermal printer(&Serial2);  // Or Serial2, Serial3, etc.
 
@@ -32,11 +35,6 @@ const int echoPinSuhu = 2;
 long durationSuhu;
 float distanceCmSuhu;
 float distanceInchSuhu;
-const int trigPinPintu = 14;
-const int echoPinPintu = 27;
-long durationPintu;
-float distanceCmPintu;
-float distanceInchPintu;
 #define SOUND_VELOCITY 0.034
 #define CM_TO_INCH 0.393701
 //============== suhu ===================
@@ -71,16 +69,20 @@ const int EN2 = 26;
 const int IN3 = 25;
 const int IN4 = 33;
 
+//=============== limit switch ==================
+const int limitSwitchPin1 = 14;  // Pin limit switch 1
+const int limitSwitchPin2 = 27;  // Pin limit switch 2
+
 void setup() {
   pinMode(buttonPinPasien, INPUT_PULLUP);
   pinMode(buttonPinPengunjung, INPUT_PULLUP);
-  pinMode(trigPinSuhu, OUTPUT);   // Sets the trigPin as an Output
-  pinMode(echoPinSuhu, INPUT);    // Sets the echoPin as an Input
-  pinMode(trigPinPintu, OUTPUT);  // Sets the trigPin as an Output
-  pinMode(echoPinPintu, INPUT);   // Sets the echoPin as an Input
+  pinMode(trigPinSuhu, OUTPUT);  // Sets the trigPin as an Output
+  pinMode(echoPinSuhu, INPUT);   // Sets the echoPin as an Input
   pinMode(EN2, OUTPUT);
   pinMode(IN3, OUTPUT);
   pinMode(IN4, OUTPUT);
+  pinMode(limitSwitchPin1, INPUT_PULLUP);
+  pinMode(limitSwitchPin2, INPUT_PULLUP);
   Serial.begin(9600);
   Serial.begin(115200);
   Wire.begin(SDA, SCL);
@@ -89,11 +91,11 @@ void setup() {
   lcd.begin();
   lcd.backlight();
   lcd.setCursor(0, 0);
-  lcd.print("sistem aktif");
+  lcd.print("Sistem aktif");
   delay(3000);
   lcd.clear();
   lcd.setCursor(0, 0);
-  lcd.print("tekan salah");
+  lcd.print("Tekan salah");
   lcd.setCursor(0, 1);
   lcd.print("satu tombol");
   //  if (!mlx.begin()) {
@@ -107,7 +109,11 @@ void setup() {
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
-    Serial.println("Connecting to WiFi..");
+    // Serial.println("Connecting to WiFi..");
+    lcd.setCursor(0, 0);
+    lcd.print("Connecting to");
+    lcd.setCursor(0, 1);
+    lcd.print("WiFi");
   }
   Serial.println(WiFi.localIP());
   // Connect to database
@@ -119,7 +125,6 @@ void setup() {
 }
 
 void loop() {
-  jarakPintu();
   jarakSuhu();
   suhu();
   monitoring();
@@ -127,11 +132,21 @@ void loop() {
   buttonStatePasien = digitalRead(buttonPinPasien);
   buttonStatePengunjung = digitalRead(buttonPinPengunjung);
   // check if the pushbutton is pressed. If it is, the buttonState is HIGH:
+  if (digitalRead(limitSwitchPin1) == LOW) {
+    Serial.println("Limit Switch 1 ditekan");
+    stopMotor();  // Berhenti motor
+    delay(1000);
+    closeDoor();  // Menutup pintu
+  }
+  if (digitalRead(limitSwitchPin2) == LOW) {
+    Serial.println("Limit Switch 2 ditekan");
+    stopMotor();
+  }
   if (buttonStatePasien == LOW) {
     isPasien = true;
     Serial.println(antrianPasien);
     Serial.println("pasien");
-    antrianPasien++;
+    // antrianPasien++;
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print("Pasien");
@@ -146,7 +161,7 @@ void loop() {
     isPengunjung = true;
     Serial.println(antrianPengunjung);
     Serial.println("pengunjung");
-    antrianPengunjung++;
+    // antrianPengunjung++;
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print("Pengunjung");
@@ -160,95 +175,121 @@ void loop() {
   if (distanceCmSuhu < 8 and distanceCmSuhu != 0) {
     stringOne = String(suhuterbaca);
     if (isPasien == true) {
-      json.clear();
-      json.set("tanggal", getFormattedDate(timeinfo));
-      json.set("jumlah_pasien", antrianPasien);
-      json.set("pasien", suhuterbaca);
+      FirebaseJson pasienData;
+      pasienData.set("antrianPasien", antrianPasien);
+      pasienData.set("suhu", suhuterbaca);
+      String currentDate = getFormattedDate(timeinfo);
 
-      // Update the Firebase node for the current date
-      if (Firebase.updateNode(firebaseData, "/data_pasien/" + String(antrianPasien - 1), json)) {
-        Serial.println("Data pasien berhasil diupdate");
+      // Check if the currentDate exists in the Firebase node
+      if (Firebase.getJSON(firebaseData, "/data_pasien/" + currentDate)) {
+        // Parse the existing JSON data as a FirebaseJsonArray
+        FirebaseJsonArray* existingData = firebaseData.jsonArrayPtr();
+
+        // Add the new pasienData to the existing array
+        existingData->add(pasienData);
+
+        // Update the Firebase node with the updated array
+        if (Firebase.setArray(firebaseData, "/data_pasien/" + currentDate, *existingData)) {
+          Serial.println("Data pasien berhasil diupdate");
+        } else {
+          Serial.println("Gagal mengupdate data pasien");
+        }
       } else {
-        Serial.println("Gagal mengupdate data pasien");
+        // Create a new FirebaseJsonArray and add the pasienData
+        FirebaseJsonArray newData;
+        newData.add(pasienData);
+
+        // Set the new array in the Firebase node for the currentDate
+        if (Firebase.setArray(firebaseData, "/data_pasien/" + currentDate, newData)) {
+          Serial.println("Data pasien berhasil diupdate");
+        } else {
+          Serial.println("Gagal mengupdate data pasien");
+        }
       }
+      antrianPasien++;
       lcd.clear();
       lcd.print(" SUHU : ");
       lcd.print(suhuterbaca, 1);
       lcd.write(simbol);
       lcd.print("C");
       isPasien = false;
-      if (distanceCmPintu < 8) {
-        stopMotor();  // Berhenti motor
-        closeDoor();  // Menutup pintu
-      } else {
-        // Jika jarak lebih dari atau sama dengan 8 cm, gerakkan motor ke satu sisi
-        openDoor();
-      }
-      delay(5000);
+      openDoor();
+      delay(1500);
       lcd.clear();
       lcd.setCursor(0, 0);
-      lcd.print("tekan salah");
+      lcd.print("Tekan salah");
       lcd.setCursor(0, 1);
       lcd.print("satu tombol");
     }
-
     if (isPengunjung == true) {
-      json.clear();
-      json.set("tanggal", getFormattedDate(timeinfo));
-      json.set("jumlah_pengunjung", antrianPengunjung);
-      json.set("pengunjung", suhuterbaca);
+      FirebaseJson pengunjungData;
+      pengunjungData.set("antrianPengunjung", antrianPengunjung);
+      pengunjungData.set("suhu", suhuterbaca);
+      String currentDate = getFormattedDate(timeinfo);
 
-      // Update the Firebase node for the current date
-      if (Firebase.updateNode(firebaseData, "/data_pengunjung/" + String(antrianPengunjung - 1), json)) {
-        Serial.println("Data pengunjung berhasil diupdate");
-      } else {
-        Serial.println("Gagal mengupdate data pengunjung");
-      }
-      // Cek apakah suhu diizinkan
-      if (isPengunjung == true && suhuterbaca > batassuhu) {
-        lcd.clear();
-        lcd.setCursor(0, 0);
-        lcd.print("Tidak boleh masuk");
-        lcd.setCursor(0, 1);
-        lcd.print(" SUHU : ");
-        lcd.print(suhuterbaca, 1);
-        lcd.write(simbol);
-        lcd.print("C");
-        Serial.println(suhuterbaca);
-        isPengunjung = false;
-        delay(5000);
-        lcd.clear();
-        lcd.setCursor(0, 0);
-        lcd.print("tekan salah");
-        lcd.setCursor(0, 1);
-        lcd.print("satu tombol");
-      } else {
-        lcd.clear();
-        lcd.setCursor(0, 0);
-        lcd.print("Diizinkan masuk");
-        lcd.setCursor(0, 1);
-        lcd.print(" SUHU : ");
-        lcd.print(suhuterbaca, 1);
-        lcd.write(simbol);
-        lcd.print("C");
-        Serial.println(suhuterbaca);
-        isPengunjung = false;
-        // Buka pintu
-        if (distanceCmPintu < 8) {
-          stopMotor();  // Berhenti motor
-          closeDoor();  // Menutup pintu
+      if (Firebase.getJSON(firebaseData, "/data_pengunjung/" + currentDate)) {
+        // Parse the existing JSON data as a FirebaseJsonArray
+        FirebaseJsonArray* existingData = firebaseData.jsonArrayPtr();
+
+        // Add the new pengunjungData to the existing array
+        existingData->add(pengunjungData);
+
+        // Update the Firebase node with the updated array
+        if (Firebase.setArray(firebaseData, "/data_pengunjung/" + currentDate, *existingData)) {
+          Serial.println("Data pengunjung berhasil diupdate");
         } else {
-          // Jika jarak lebih dari atau sama dengan 8 cm, gerakkan motor ke satu sisi
-          openDoor();
+          Serial.println("Gagal mengupdate data pengunjung");
         }
-        delay(5000);
-        lcd.clear();
-        lcd.setCursor(0, 0);
-        lcd.print("tekan salah");
-        lcd.setCursor(0, 1);
-        lcd.print("satu tombol");
-        Serial.println(suhuterbaca);
+      } else {
+        // Create a new FirebaseJsonArray and add the pengunjungData
+        FirebaseJsonArray newData;
+        newData.add(pengunjungData);
+
+        // Set the new array in the Firebase node for the currentDate
+        if (Firebase.setArray(firebaseData, "/data_pengunjung/" + currentDate, newData)) {
+          Serial.println("Data pengunjung berhasil diupdate");
+        } else {
+          Serial.println("Gagal mengupdate data pengunjung");
+        }
       }
+      antrianPengunjung++;
+    }
+    if (isPengunjung == true && suhuterbaca > batassuhu) {
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Tidak boleh masuk");
+      lcd.setCursor(0, 1);
+      lcd.print(" SUHU : ");
+      lcd.print(suhuterbaca, 1);
+      lcd.write(simbol);
+      lcd.print("C");
+      Serial.println(suhuterbaca);
+      isPengunjung = false;
+      delay(3000);
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Tekan salah");
+      lcd.setCursor(0, 1);
+      lcd.print("satu tombol");
+    } else {
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Diizinkan masuk");
+      lcd.setCursor(0, 1);
+      lcd.print(" SUHU : ");
+      lcd.print(suhuterbaca, 1);
+      lcd.write(simbol);
+      lcd.print("C");
+      Serial.println(suhuterbaca);
+      isPengunjung = false;
+      openDoor();
+      delay(1500);
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Tekan salah");
+      lcd.setCursor(0, 1);
+      lcd.print("satu tombol");
+      Serial.println(suhuterbaca);
     }
     delay(1000);
   }
@@ -275,20 +316,6 @@ void jarakSuhu() {
   }
 }
 
-void jarakPintu() {
-  digitalWrite(trigPinPintu, LOW);
-  delayMicroseconds(2);
-  digitalWrite(trigPinPintu, HIGH);  // Sets the trigPin on HIGH state for 10 micro seconds
-  delayMicroseconds(10);
-  digitalWrite(trigPinPintu, LOW);
-  durationPintu = pulseIn(echoPinPintu, HIGH);           // Reads the echoPin, returns the sound wave travel time in microseconds
-  distanceCmPintu = durationPintu * SOUND_VELOCITY / 2;  // Calculate the distance
-  distanceInchPintu = distanceCmPintu * CM_TO_INCH;      // Convert to inches
-  if (distanceCmPintu > 100) {
-    distanceCmPintu = 100;
-  }
-}
-
 void suhu() {
   suhuterbaca = mlx.readObjectTempC();
   if (suhuterbaca > 100) suhuterbaca = 100;
@@ -300,11 +327,7 @@ void monitoring() {
   Serial.print("*C   ");
   Serial.print(distanceCmSuhu);
   Serial.print("cm ");
-  Serial.println();
-  Serial.println("Jarak Pintu");
-  Serial.print(distanceCmPintu);
-  Serial.print("cm ");
-  Serial.println();
+  delay(5000);
 }
 
 void printLocalTime() {
@@ -405,41 +428,4 @@ void stopMotor() {
   digitalWrite(IN3, LOW);
   digitalWrite(IN4, LOW);
   analogWrite(EN2, 0);
-  delay(2000);  // Ubah delay sesuai dengan waktu yang dibutuhkan untuk menutup pintu
-  stopMotor();  // Berhenti motor setelah pintu ditutup
-}
-
-void pintu() {
-  jarakPintu();
-  digitalWrite(IN3, HIGH);
-  digitalWrite(IN4, LOW);
-  analogWrite(EN2, 70);
-
-  // Cek jarak selama pintu dibuka
-  if (distanceCmPintu < 8) {
-    // Pintu mencapai jarak kurang dari 5cm, hentikan motor
-    digitalWrite(IN3, LOW);
-    digitalWrite(IN4, LOW);
-    // analogWrite(EN2, 0);
-    digitalWrite(EN2, LOW);
-
-    // Tunggu 5 detik sebelum memutar motor ke arah sebaliknya
-    delay(5000);
-
-    // Putar motor ke arah sebaliknya
-    digitalWrite(IN3, LOW);
-    digitalWrite(IN4, HIGH);
-    analogWrite(EN2, 70);
-
-    // Cek jarak selama motor berputar
-    if (distanceCmPintu >= 10) {
-      // Pintu mencapai atau melebihi jarak 5cm, hentikan motor
-      digitalWrite(IN3, LOW);
-      digitalWrite(IN4, LOW);
-      analogWrite(EN2, 0);
-    }
-    delay(100);  // Tunggu 100ms sebelum memeriksa kembali jarak
-  }
-
-  delay(100);  // Tunggu 100ms sebelum memeriksa kembali jarak
 }
