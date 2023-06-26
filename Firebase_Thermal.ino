@@ -93,15 +93,6 @@ void setup() {
   lcd.setCursor(0, 0);
   lcd.print("Sistem aktif");
   delay(3000);
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print("Tekan salah");
-  lcd.setCursor(0, 1);
-  lcd.print("satu tombol");
-  //  if (!mlx.begin()) {
-  //    Serial.println("Error connecting to MLX sensor. Check wiring.");
-  //    while (1);
-  //  }
   mlx.begin();
 
   // Connect to Wi-Fi
@@ -110,11 +101,13 @@ void setup() {
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
     // Serial.println("Connecting to WiFi..");
+    lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print("Connecting to");
     lcd.setCursor(0, 1);
     lcd.print("WiFi");
   }
+  tekanTombol();
   Serial.println(WiFi.localIP());
   // Connect to database
   Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
@@ -207,6 +200,7 @@ void loop() {
         }
       }
       antrianPasien++;
+      printTiket();
       lcd.clear();
       lcd.print(" SUHU : ");
       lcd.print(suhuterbaca, 1);
@@ -215,11 +209,7 @@ void loop() {
       isPasien = false;
       openDoor();
       delay(1500);
-      lcd.clear();
-      lcd.setCursor(0, 0);
-      lcd.print("Tekan salah");
-      lcd.setCursor(0, 1);
-      lcd.print("satu tombol");
+      tekanTombol();
     }
     if (isPengunjung == true) {
       FirebaseJson pengunjungData;
@@ -266,11 +256,7 @@ void loop() {
       Serial.println(suhuterbaca);
       isPengunjung = false;
       delay(3000);
-      lcd.clear();
-      lcd.setCursor(0, 0);
-      lcd.print("Tekan salah");
-      lcd.setCursor(0, 1);
-      lcd.print("satu tombol");
+      tekanTombol();
     } else {
       lcd.clear();
       lcd.setCursor(0, 0);
@@ -284,11 +270,7 @@ void loop() {
       isPengunjung = false;
       openDoor();
       delay(1500);
-      lcd.clear();
-      lcd.setCursor(0, 0);
-      lcd.print("Tekan salah");
-      lcd.setCursor(0, 1);
-      lcd.print("satu tombol");
+      tekanTombol();
       Serial.println(suhuterbaca);
     }
     delay(1000);
@@ -327,7 +309,8 @@ void monitoring() {
   Serial.print("*C   ");
   Serial.print(distanceCmSuhu);
   Serial.print("cm ");
-  delay(5000);
+  Serial.println();
+  delay(2000);
 }
 
 void printLocalTime() {
@@ -387,7 +370,7 @@ void printLocalTime() {
   }
 }
 
-void printtiket() {
+void printTiket() {
   printer.setLineHeight(10);
   printer.justify('C');
   printer.setSize('M');
@@ -396,18 +379,23 @@ void printtiket() {
 
   printer.justify('L');
   printer.setSize('S');
-  printer.boldOn();
-  printer.print(F("No Pengunjung ke : "));
-  printer.print(antrianPasien);
-  Serial2.println(antrianPasien);
-
-  printer.justify('L');
-  printer.setSize('S');
   printer.print(F("suhu terbaca : "));
   printer.print(suhuterbaca, 1);
   printer.println(F(" C"));
 
+  printer.justify('L');
+  printer.setSize('S');
+  printer.println(F("No Pengunjung ke : "));
+  printer.println(F("\n"));
+  printer.justify('C');
+  printer.setSize('L');
+  printer.doubleHeightOn();
+  printer.underlineOn();
+  printer.print(antrianPasien);
+  printer.underlineOff();
+  printer.doubleHeightOn();
   printer.println(F("\n\n\n\n\n\n"));
+  Serial2.println(antrianPasien);
 }
 
 void openDoor() {
@@ -428,4 +416,12 @@ void stopMotor() {
   digitalWrite(IN3, LOW);
   digitalWrite(IN4, LOW);
   analogWrite(EN2, 0);
+}
+
+void tekanTombol() {
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Tekan salah");
+  lcd.setCursor(0, 1);
+  lcd.print("satu tombol");
 }

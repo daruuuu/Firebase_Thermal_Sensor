@@ -1,0 +1,13 @@
+#line 1 "C:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal\\ArduinoOutput\\sketch\\ArduinoOutput\\build.options.json"
+#line 1 "C:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal\\ArduinoOutput\\build.options.json"
+{
+  "additionalFiles": "..\\..\\..,..\\..\\..,..\\..\\..,..\\..\\..,..\\..\\..,..\\..\\..\\..\\..,..\\..\\..\\..\\..,..\\..\\..\\..\\..,..\\..\\..\\..\\..,..\\..\\..\\..",
+  "builtInToolsFolders": "",
+  "compiler.optimization_flags": "-Os",
+  "customBuildProperties": "",
+  "fqbn": "esp32:esp32:esp32:JTAGAdapter=default,PSRAM=disabled,PartitionScheme=default,CPUFreq=240,FlashMode=qio,FlashFreq=80,FlashSize=4M,UploadSpeed=921600,LoopCore=1,EventsCore=1,DebugLevel=none,EraseFlash=none",
+  "hardwareFolders": "C:\\Users\\ASUS\\AppData\\Local\\Arduino15\\packages",
+  "otherLibrariesFolders": "C:\\Users\\ASUS\\Documents\\Arduino\\libraries",
+  "runtime.ide.version": "10607",
+  "sketchLocation": "C:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal"
+}
