@@ -54,8 +54,8 @@ const int buttonPinPengunjung = 13;  // the number of the pushbutton pin
 // variables will change:
 int buttonStatePasien = 0;  // variable for reading the pushbutton status
 int buttonStatePengunjung = 0;
-int antrianPasien = 1;
-int antrianPengunjung = 1;
+int antrianPasien = 0;
+int antrianPengunjung = 0;
 bool isPasien = false;
 bool isPengunjung = false;
 //============== waktu ==================
@@ -149,7 +149,7 @@ void loop() {
     delay(1000);
     lcd.clear();
     lcd.setCursor(0, 0);
-    lcd.print("letakan tangan");
+    lcd.print("Letakan tangan");
     lcd.setCursor(0, 1);
     lcd.print("di sensor");
   }
@@ -164,7 +164,7 @@ void loop() {
     delay(1000);
     lcd.clear();
     lcd.setCursor(0, 0);
-    lcd.print("letakan tangan");
+    lcd.print("Letakan tangan");
     lcd.setCursor(0, 1);
     lcd.print("di sensor");
   }
@@ -390,15 +390,16 @@ void printTiket() {
   printer.setSize('S');
   printer.println(F("No Pengunjung ke : "));
   printer.println(F("\n"));
+
   printer.justify('C');
   printer.setSize('L');
   printer.doubleHeightOn();
   printer.underlineOn();
   printer.print(antrianPasien);
   printer.underlineOff();
-  printer.doubleHeightOn();
+  printer.doubleHeightOff();
   printer.println(F("\n\n\n\n\n\n"));
-  Serial2.println(antrianPasien);
+  Serial.println(antrianPasien);
 }
 
 void openDoor() {
