@@ -37,9 +37,16 @@ const int echoPinSuhu = 2;
 long durationSuhu;
 float distanceCmSuhu;
 float distanceInchSuhu;
+
+const int trigPinPintu = 32;
+const int echoPinPintu = 35;
+long durationPintu;
+float distanceCmPintu;
+float distanceInchPintu;
+
 #define SOUND_VELOCITY 0.034
 #define CM_TO_INCH 0.393701
-//============== suhu ===================
+//============== Sensor Suhu ===================
 Adafruit_MLX90614 mlx = Adafruit_MLX90614();
 float suhuterbaca;
 String stringOne;
@@ -57,6 +64,7 @@ int antrianPasien = 0;
 int antrianPengunjung = 0;
 bool isPasien = false;
 bool isPengunjung = false;
+bool isPerson = false;
 //============== waktu ==================
 const char* ntpServer = "pool.ntp.org";
 const long gmtOffset_sec = 0;
@@ -75,36 +83,40 @@ const int IN4 = 33;
 const int limitSwitchPin1 = 14;  // Pin limit switch 1
 const int limitSwitchPin2 = 27;  // Pin limit switch 2
 
-#line 76 "C:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal\\Firebase_Thermal.ino"
+#line 84 "C:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal\\Firebase_Thermal.ino"
 void setup();
-#line 120 "C:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal\\Firebase_Thermal.ino"
+#line 130 "C:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal\\Firebase_Thermal.ino"
 void loop();
-#line 281 "C:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal\\Firebase_Thermal.ino"
+#line 309 "C:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal\\Firebase_Thermal.ino"
 String getFormattedDate(struct tm timeinfo);
-#line 287 "C:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal\\Firebase_Thermal.ino"
+#line 315 "C:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal\\Firebase_Thermal.ino"
 void jarakSuhu();
-#line 301 "C:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal\\Firebase_Thermal.ino"
+#line 329 "C:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal\\Firebase_Thermal.ino"
+void jarakPintu();
+#line 343 "C:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal\\Firebase_Thermal.ino"
 void suhu();
-#line 306 "C:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal\\Firebase_Thermal.ino"
+#line 348 "C:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal\\Firebase_Thermal.ino"
 void monitoring();
-#line 316 "C:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal\\Firebase_Thermal.ino"
+#line 360 "C:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal\\Firebase_Thermal.ino"
 void printLocalTime();
-#line 373 "C:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal\\Firebase_Thermal.ino"
+#line 417 "C:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal\\Firebase_Thermal.ino"
 void printTiket();
-#line 402 "C:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal\\Firebase_Thermal.ino"
+#line 446 "C:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal\\Firebase_Thermal.ino"
 void openDoor();
-#line 409 "C:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal\\Firebase_Thermal.ino"
+#line 454 "C:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal\\Firebase_Thermal.ino"
 void closeDoor();
-#line 416 "C:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal\\Firebase_Thermal.ino"
+#line 462 "C:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal\\Firebase_Thermal.ino"
 void stopMotor();
-#line 422 "C:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal\\Firebase_Thermal.ino"
+#line 469 "C:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal\\Firebase_Thermal.ino"
 void tekanTombol();
-#line 76 "C:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal\\Firebase_Thermal.ino"
+#line 84 "C:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal\\Firebase_Thermal.ino"
 void setup() {
   pinMode(buttonPinPasien, INPUT_PULLUP);
   pinMode(buttonPinPengunjung, INPUT_PULLUP);
   pinMode(trigPinSuhu, OUTPUT);  // Sets the trigPin as an Output
   pinMode(echoPinSuhu, INPUT);   // Sets the echoPin as an Input
+  pinMode(trigPinPintu, OUTPUT);  // Sets the trigPin as an Output
+  pinMode(echoPinPintu, INPUT);   // Sets the echoPin as an Input
   pinMode(EN2, OUTPUT);
   pinMode(IN3, OUTPUT);
   pinMode(IN4, OUTPUT);
@@ -146,22 +158,40 @@ void setup() {
 
 void loop() {
   jarakSuhu();
+  jarakPintu();
   suhu();
   monitoring();
   // read the state of the pushbutton value:
   buttonStatePasien = digitalRead(buttonPinPasien);
   buttonStatePengunjung = digitalRead(buttonPinPengunjung);
   // check if the pushbutton is pressed. If it is, the buttonState is HIGH:
-  if (digitalRead(limitSwitchPin1) == LOW) {
-    Serial.println("Limit Switch 1 ditekan");
-    stopMotor();  // Berhenti motor
-    delay(1000);
-    closeDoor();  // Menutup pintu
+  if (distanceCmPintu < 20) {
+    isPerson = true;
+    Serial.println("ada orang");
+  } else {
+    isPerson = false;
+    Serial.println("tidak ada orang");
   }
+
+ if (digitalRead(limitSwitchPin1) == LOW) {
+  Serial.println("Limit Switch 1 ditekan");
+  stopMotor();
+  delay(5000);
+  closeDoor();
+  delay(4000);
+  stopMotor();
+  if (isPerson == false) {
+    closeDoor();
+  } else {
+    openDoor();
+  }
+}
+
   if (digitalRead(limitSwitchPin2) == LOW) {
     Serial.println("Limit Switch 2 ditekan");
     stopMotor();
   }
+
   if (buttonStatePasien == LOW) {
     isPasien = true;
     Serial.println(antrianPasien);
@@ -325,6 +355,20 @@ void jarakSuhu() {
   }
 }
 
+void jarakPintu() {
+  digitalWrite(trigPinPintu, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPinPintu, HIGH);  // Sets the trigPin on HIGH state for 10 micro seconds
+  delayMicroseconds(10);
+  digitalWrite(trigPinPintu, LOW);
+  durationPintu = pulseIn(echoPinPintu, HIGH);           // Reads the echoPin, returns the sound wave travel time in microseconds
+  distanceCmPintu = durationPintu * SOUND_VELOCITY / 2;  // Calculate the distance
+  distanceInchPintu = distanceCmPintu * CM_TO_INCH;      // Convert to inches
+  if (distanceCmPintu > 100) {
+    distanceCmPintu = 100;
+  }
+}
+
 void suhu() {
   suhuterbaca = mlx.readObjectTempC();
   if (suhuterbaca > 100) suhuterbaca = 100;
@@ -337,6 +381,8 @@ void monitoring() {
   Serial.print(distanceCmSuhu);
   Serial.print("cm ");
   Serial.println();
+  Serial.print("Jarak Pintu ");
+  Serial.println(distanceCmPintu);
   delay(2000);
 }
 
@@ -430,6 +476,7 @@ void openDoor() {
   digitalWrite(IN3, HIGH);
   digitalWrite(IN4, LOW);
   analogWrite(EN2, 70);
+  Serial.println("buka pintu");
 }
 
 // Fungsi untuk menggerakkan motor ke arah berlawanan (menutup pintu)
@@ -437,6 +484,7 @@ void closeDoor() {
   digitalWrite(IN3, LOW);
   digitalWrite(IN4, HIGH);
   analogWrite(EN2, 70);
+  Serial.println("tutup pintu");
 }
 
 // Fungsi untuk menghentikan motor
@@ -444,6 +492,7 @@ void stopMotor() {
   digitalWrite(IN3, LOW);
   digitalWrite(IN4, LOW);
   analogWrite(EN2, 0);
+  Serial.println("motor berhenti");
 }
 
 void tekanTombol() {

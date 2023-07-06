@@ -38,9 +38,16 @@ const int echoPinSuhu = 2;
 long durationSuhu;
 float distanceCmSuhu;
 float distanceInchSuhu;
+
+const int trigPinPintu = 32;
+const int echoPinPintu = 35;
+long durationPintu;
+float distanceCmPintu;
+float distanceInchPintu;
+
 #define SOUND_VELOCITY 0.034
 #define CM_TO_INCH 0.393701
-//============== suhu ===================
+//============== Sensor Suhu ===================
 Adafruit_MLX90614 mlx = Adafruit_MLX90614();
 float suhuterbaca;
 String stringOne;
@@ -58,6 +65,7 @@ int antrianPasien = 0;
 int antrianPengunjung = 0;
 bool isPasien = false;
 bool isPengunjung = false;
+bool isPerson = false;
 //============== waktu ==================
 const char* ntpServer = "pool.ntp.org";
 const long gmtOffset_sec = 0;
@@ -81,6 +89,8 @@ void setup() {
   pinMode(buttonPinPengunjung, INPUT_PULLUP);
   pinMode(trigPinSuhu, OUTPUT);  // Sets the trigPin as an Output
   pinMode(echoPinSuhu, INPUT);   // Sets the echoPin as an Input
+  pinMode(trigPinPintu, OUTPUT);  // Sets the trigPin as an Output
+  pinMode(echoPinPintu, INPUT);   // Sets the echoPin as an Input
   pinMode(EN2, OUTPUT);
   pinMode(IN3, OUTPUT);
   pinMode(IN4, OUTPUT);
@@ -122,22 +132,40 @@ void setup() {
 
 void loop() {
   jarakSuhu();
+  jarakPintu();
   suhu();
   monitoring();
   // read the state of the pushbutton value:
   buttonStatePasien = digitalRead(buttonPinPasien);
   buttonStatePengunjung = digitalRead(buttonPinPengunjung);
   // check if the pushbutton is pressed. If it is, the buttonState is HIGH:
-  if (digitalRead(limitSwitchPin1) == LOW) {
-    Serial.println("Limit Switch 1 ditekan");
-    stopMotor();  // Berhenti motor
-    delay(1000);
-    closeDoor();  // Menutup pintu
+  if (distanceCmPintu < 20) {
+    isPerson = true;
+    Serial.println("ada orang");
+  } else {
+    isPerson = false;
+    Serial.println("tidak ada orang");
   }
+
+ if (digitalRead(limitSwitchPin1) == LOW) {
+  Serial.println("Limit Switch 1 ditekan");
+  stopMotor();
+  delay(5000);
+  closeDoor();
+  delay(4000);
+  stopMotor();
+  if (isPerson == false) {
+    closeDoor();
+  } else {
+    openDoor();
+  }
+}
+
   if (digitalRead(limitSwitchPin2) == LOW) {
     Serial.println("Limit Switch 2 ditekan");
     stopMotor();
   }
+
   if (buttonStatePasien == LOW) {
     isPasien = true;
     Serial.println(antrianPasien);
@@ -301,6 +329,20 @@ void jarakSuhu() {
   }
 }
 
+void jarakPintu() {
+  digitalWrite(trigPinPintu, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPinPintu, HIGH);  // Sets the trigPin on HIGH state for 10 micro seconds
+  delayMicroseconds(10);
+  digitalWrite(trigPinPintu, LOW);
+  durationPintu = pulseIn(echoPinPintu, HIGH);           // Reads the echoPin, returns the sound wave travel time in microseconds
+  distanceCmPintu = durationPintu * SOUND_VELOCITY / 2;  // Calculate the distance
+  distanceInchPintu = distanceCmPintu * CM_TO_INCH;      // Convert to inches
+  if (distanceCmPintu > 100) {
+    distanceCmPintu = 100;
+  }
+}
+
 void suhu() {
   suhuterbaca = mlx.readObjectTempC();
   if (suhuterbaca > 100) suhuterbaca = 100;
@@ -313,6 +355,8 @@ void monitoring() {
   Serial.print(distanceCmSuhu);
   Serial.print("cm ");
   Serial.println();
+  Serial.print("Jarak Pintu ");
+  Serial.println(distanceCmPintu);
   delay(2000);
 }
 
@@ -406,6 +450,7 @@ void openDoor() {
   digitalWrite(IN3, HIGH);
   digitalWrite(IN4, LOW);
   analogWrite(EN2, 70);
+  Serial.println("buka pintu");
 }
 
 // Fungsi untuk menggerakkan motor ke arah berlawanan (menutup pintu)
@@ -413,6 +458,7 @@ void closeDoor() {
   digitalWrite(IN3, LOW);
   digitalWrite(IN4, HIGH);
   analogWrite(EN2, 70);
+  Serial.println("tutup pintu");
 }
 
 // Fungsi untuk menghentikan motor
@@ -420,6 +466,7 @@ void stopMotor() {
   digitalWrite(IN3, LOW);
   digitalWrite(IN4, LOW);
   analogWrite(EN2, 0);
+  Serial.println("motor berhenti");
 }
 
 void tekanTombol() {

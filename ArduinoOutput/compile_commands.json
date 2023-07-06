@@ -4184,11 +4184,11 @@
    "-IC:\\Users\\ASUS\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.9\\libraries\\SPI\\src",
    "-IC:\\Users\\ASUS\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.9\\libraries\\Ethernet\\src",
    "-IC:\\Users\\ASUS\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.9\\libraries\\Update\\src",
-   "C:\\Users\\ASUS\\Documents\\Arduino\\libraries\\Adafruit_BusIO\\Adafruit_I2CDevice.cpp",
+   "C:\\Users\\ASUS\\Documents\\Arduino\\libraries\\Adafruit_BusIO\\Adafruit_BusIO_Register.cpp",
    "-o",
-   "C:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal\\ArduinoOutput\\libraries\\Adafruit_BusIO\\Adafruit_I2CDevice.cpp.o"
+   "C:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal\\ArduinoOutput\\libraries\\Adafruit_BusIO\\Adafruit_BusIO_Register.cpp.o"
   ],
-  "file": "C:\\Users\\ASUS\\Documents\\Arduino\\libraries\\Adafruit_BusIO\\Adafruit_I2CDevice.cpp"
+  "file": "C:\\Users\\ASUS\\Documents\\Arduino\\libraries\\Adafruit_BusIO\\Adafruit_BusIO_Register.cpp"
  },
  {
   "directory": "c:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal",
@@ -4446,11 +4446,11 @@
    "-IC:\\Users\\ASUS\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.9\\libraries\\SPI\\src",
    "-IC:\\Users\\ASUS\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.9\\libraries\\Ethernet\\src",
    "-IC:\\Users\\ASUS\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.9\\libraries\\Update\\src",
-   "C:\\Users\\ASUS\\Documents\\Arduino\\libraries\\Adafruit_BusIO\\Adafruit_BusIO_Register.cpp",
+   "C:\\Users\\ASUS\\Documents\\Arduino\\libraries\\Adafruit_BusIO\\Adafruit_I2CDevice.cpp",
    "-o",
-   "C:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal\\ArduinoOutput\\libraries\\Adafruit_BusIO\\Adafruit_BusIO_Register.cpp.o"
+   "C:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal\\ArduinoOutput\\libraries\\Adafruit_BusIO\\Adafruit_I2CDevice.cpp.o"
   ],
-  "file": "C:\\Users\\ASUS\\Documents\\Arduino\\libraries\\Adafruit_BusIO\\Adafruit_BusIO_Register.cpp"
+  "file": "C:\\Users\\ASUS\\Documents\\Arduino\\libraries\\Adafruit_BusIO\\Adafruit_I2CDevice.cpp"
  },
  {
   "directory": "c:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal",
