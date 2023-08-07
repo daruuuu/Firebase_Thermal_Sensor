@@ -83,33 +83,6 @@ const int IN4 = 33;
 const int limitSwitchPin1 = 14;  // Pin limit switch 1
 const int limitSwitchPin2 = 27;  // Pin limit switch 2
 
-#line 84 "C:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal\\Firebase_Thermal.ino"
-void setup();
-#line 130 "C:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal\\Firebase_Thermal.ino"
-void loop();
-#line 309 "C:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal\\Firebase_Thermal.ino"
-String getFormattedDate(struct tm timeinfo);
-#line 315 "C:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal\\Firebase_Thermal.ino"
-void jarakSuhu();
-#line 329 "C:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal\\Firebase_Thermal.ino"
-void jarakPintu();
-#line 343 "C:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal\\Firebase_Thermal.ino"
-void suhu();
-#line 348 "C:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal\\Firebase_Thermal.ino"
-void monitoring();
-#line 360 "C:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal\\Firebase_Thermal.ino"
-void printLocalTime();
-#line 417 "C:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal\\Firebase_Thermal.ino"
-void printTiket();
-#line 446 "C:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal\\Firebase_Thermal.ino"
-void openDoor();
-#line 454 "C:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal\\Firebase_Thermal.ino"
-void closeDoor();
-#line 462 "C:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal\\Firebase_Thermal.ino"
-void stopMotor();
-#line 469 "C:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal\\Firebase_Thermal.ino"
-void tekanTombol();
-#line 84 "C:\\Users\\ASUS\\Documents\\Semester 8\\Code\\Firebase_Thermal\\Firebase_Thermal.ino"
 void setup() {
   pinMode(buttonPinPasien, INPUT_PULLUP);
   pinMode(buttonPinPengunjung, INPUT_PULLUP);
@@ -168,7 +141,7 @@ void loop() {
   if (distanceCmPintu < 20) {
     isPerson = true;
     Serial.println("ada orang");
-  } else {
+  } else { 
     isPerson = false;
     Serial.println("tidak ada orang");
   }
@@ -179,7 +152,6 @@ void loop() {
   delay(5000);
   closeDoor();
   delay(4000);
-  stopMotor();
   if (isPerson == false) {
     closeDoor();
   } else {
@@ -349,7 +321,6 @@ void jarakSuhu() {
   digitalWrite(trigPinSuhu, LOW);
   durationSuhu = pulseIn(echoPinSuhu, HIGH);           // Reads the echoPin, returns the sound wave travel time in microseconds
   distanceCmSuhu = durationSuhu * SOUND_VELOCITY / 2;  // Calculate the distance
-  distanceInchSuhu = distanceCmSuhu * CM_TO_INCH;      // Convert to inches
   if (distanceCmSuhu > 100) {
     distanceCmSuhu = 100;
   }
@@ -363,7 +334,6 @@ void jarakPintu() {
   digitalWrite(trigPinPintu, LOW);
   durationPintu = pulseIn(echoPinPintu, HIGH);           // Reads the echoPin, returns the sound wave travel time in microseconds
   distanceCmPintu = durationPintu * SOUND_VELOCITY / 2;  // Calculate the distance
-  distanceInchPintu = distanceCmPintu * CM_TO_INCH;      // Convert to inches
   if (distanceCmPintu > 100) {
     distanceCmPintu = 100;
   }
@@ -479,7 +449,6 @@ void openDoor() {
   Serial.println("buka pintu");
 }
 
-// Fungsi untuk menggerakkan motor ke arah berlawanan (menutup pintu)
 void closeDoor() {
   digitalWrite(IN3, LOW);
   digitalWrite(IN4, HIGH);
@@ -487,7 +456,6 @@ void closeDoor() {
   Serial.println("tutup pintu");
 }
 
-// Fungsi untuk menghentikan motor
 void stopMotor() {
   digitalWrite(IN3, LOW);
   digitalWrite(IN4, LOW);
@@ -502,3 +470,4 @@ void tekanTombol() {
   lcd.setCursor(0, 1);
   lcd.print("satu tombol");
 }
+

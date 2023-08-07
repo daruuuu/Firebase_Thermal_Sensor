@@ -7,6 +7,7 @@
 #include "Adafruit_Thermal.h"
 #include <FirebaseESP32.h>
 #include "time.h"
+#include <ESP32Servo.h>
 // #define FIREBASE_HOST "https://dht11-with-esp32-31002-default-rtdb.firebaseio.com/"
 // #define FIREBASE_AUTH "YuYSbyytavwTFpO0jZ9bMN2EVo5KBJdpK4AeaL3Y"
 // Link database
@@ -15,6 +16,7 @@
 #define FIREBASE_AUTH "AIzaSyD6OJTHib5F8mwulbtlb_cIK4DbPipMkas"
 FirebaseData firebaseData;
 FirebaseJson json;
+
 unsigned long lastResetTimestamp = 0;
 int antrianTerakhir = 0;
 int tanggalTerakhir = 0;
@@ -81,6 +83,10 @@ const int IN4 = 33;
 const int limitSwitchPin1 = 14;  // Pin limit switch 1
 const int limitSwitchPin2 = 27;  // Pin limit switch 2
 
+//=============== servo ==================
+const int servo = 18;
+Servo servoMotor;
+
 void setup() {
   pinMode(buttonPinPasien, INPUT_PULLUP);
   pinMode(buttonPinPengunjung, INPUT_PULLUP);
@@ -93,6 +99,8 @@ void setup() {
   pinMode(IN4, OUTPUT);
   pinMode(limitSwitchPin1, INPUT_PULLUP);
   pinMode(limitSwitchPin2, INPUT_PULLUP);
+  servoMotor.attach(servo);  // attaches the servo on ESP32 pin
+  servoMotor.write(90);
   Serial.begin(9600);
   Serial.begin(115200);
   Wire.begin(SDA, SCL);
@@ -139,7 +147,7 @@ void loop() {
   if (distanceCmPintu < 20) {
     isPerson = true;
     Serial.println("ada orang");
-  } else {
+  } else { 
     isPerson = false;
     Serial.println("tidak ada orang");
   }
@@ -159,6 +167,10 @@ void loop() {
 
   if (digitalRead(limitSwitchPin2) == LOW) {
     Serial.println("Limit Switch 2 ditekan");
+    stopMotor();
+    delay(1000);
+    openDoor();
+    delay(200);
     stopMotor();
   }
 
@@ -319,7 +331,6 @@ void jarakSuhu() {
   digitalWrite(trigPinSuhu, LOW);
   durationSuhu = pulseIn(echoPinSuhu, HIGH);           // Reads the echoPin, returns the sound wave travel time in microseconds
   distanceCmSuhu = durationSuhu * SOUND_VELOCITY / 2;  // Calculate the distance
-  distanceInchSuhu = distanceCmSuhu * CM_TO_INCH;      // Convert to inches
   if (distanceCmSuhu > 100) {
     distanceCmSuhu = 100;
   }
@@ -333,7 +344,6 @@ void jarakPintu() {
   digitalWrite(trigPinPintu, LOW);
   durationPintu = pulseIn(echoPinPintu, HIGH);           // Reads the echoPin, returns the sound wave travel time in microseconds
   distanceCmPintu = durationPintu * SOUND_VELOCITY / 2;  // Calculate the distance
-  distanceInchPintu = distanceCmPintu * CM_TO_INCH;      // Convert to inches
   if (distanceCmPintu > 100) {
     distanceCmPintu = 100;
   }
@@ -449,7 +459,6 @@ void openDoor() {
   Serial.println("buka pintu");
 }
 
-// Fungsi untuk menggerakkan motor ke arah berlawanan (menutup pintu)
 void closeDoor() {
   digitalWrite(IN3, LOW);
   digitalWrite(IN4, HIGH);
@@ -457,7 +466,6 @@ void closeDoor() {
   Serial.println("tutup pintu");
 }
 
-// Fungsi untuk menghentikan motor
 void stopMotor() {
   digitalWrite(IN3, LOW);
   digitalWrite(IN4, LOW);
